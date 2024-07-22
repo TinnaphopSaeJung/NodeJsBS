@@ -1,4 +1,5 @@
 const Product = require("../Model/Products");
+const fs = require('fs')
 
 
 exports.list = async (req, res) => {
@@ -31,7 +32,13 @@ exports.read = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     // Your Code
-    const productCreated = await Product(req.body).save();
+    var data = req.body
+
+    if (req.file) {
+      data.file = req.file.filename
+    }
+
+    const productCreated = await Product(data).save();
 
     res.send(productCreated);
   } catch (err) {
@@ -58,6 +65,16 @@ exports.remove = async (req, res) => {
     // Your Code
     const id = req.params.id
     const productRemoved = await Product.findOneAndDelete({ _id: id }).exec()
+
+    if (productRemoved?.file) {   // มี file ไหม
+      await fs.unlink('./public/images' + productRemoved.file, (err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log('Remove Success');
+        }
+      })
+    }
 
     res.send(productRemoved);
   } catch (err) {
